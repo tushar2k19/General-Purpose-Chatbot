@@ -4,6 +4,8 @@ ConceptAI is a working Angular prototype of a multi-tool AI workspace. One sideb
 
 The interface is branded **ConceptAI — Intelligent Solutions**.
 
+**Live demo:** https://gtdemo.netlify.app/
+
 ## Problems this platform addresses
 
 | Problem | What people do today | What ConceptAI does |
