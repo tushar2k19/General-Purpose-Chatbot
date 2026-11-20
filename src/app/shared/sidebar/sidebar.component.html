@@ -1,0 +1,67 @@
+<!-- Shared Sidebar Navigation -->
+<aside class="sidebar" [class.collapsed]="collapsed">
+  <!-- Navigation Menu -->
+  <nav class="nav-menu">
+    <button 
+      class="nav-item" 
+      [class.active]="activeMode === 'text'"
+      (click)="navigateToMode('text')">
+      <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/>
+        <path d="M12 14l2 2 4-4"/>
+      </svg>
+      <span class="nav-label" *ngIf="!collapsed">Text Mode</span>
+    </button>
+
+    <button 
+      class="nav-item" 
+      [class.active]="activeMode === 'image'"
+      (click)="navigateToMode('image')">
+      <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21,15 16,10 5,21"/>
+      </svg>
+      <span class="nav-label" *ngIf="!collapsed">Image Mode</span>
+    </button>
+
+    <button 
+      class="nav-item" 
+      [class.active]="activeMode === 'ocr'"
+      (click)="navigateToMode('ocr')">
+      <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+        <polyline points="14,2 14,8 20,8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+        <polyline points="10,9 9,9 8,9"/>
+      </svg>
+      <span class="nav-label" *ngIf="!collapsed">OCR</span>
+    </button>
+
+    <button 
+      class="nav-item" 
+      [class.active]="activeMode === 'dpr'"
+      (click)="navigateToMode('dpr')">
+      <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+        <polyline points="14,2 14,8 20,8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+        <polyline points="10,9 9,9 8,9"/>
+      </svg>
+      <span class="nav-label" *ngIf="!collapsed">DPR Analyser</span>
+    </button>
+  </nav>
+
+  <!-- User Account Section -->
+  <div class="user-account" *ngIf="!collapsed">
+    <div class="user-avatar">
+      <div class="avatar-circle">U</div>
+    </div>
+    <div class="user-info">
+      <div class="user-name">User Account</div>
+      <div class="user-email">user@email.com</div>
+    </div>
+  </div>
+</aside>

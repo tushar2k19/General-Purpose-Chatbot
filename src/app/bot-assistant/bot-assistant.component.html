@@ -1,0 +1,134 @@
+<div class="chatbot-toggler" (click)="toggleChatbot()" [class.show]="isChatbotVisible" aria-label="Toggle Chatbot">
+  <i [class]="isChatbotVisible ? 'fas fa-times' : 'fas fa-robot'"></i>
+</div>
+
+<app-ocr-popup *ngIf="isOcrPopupVisible"
+               (close)="closeOcrPopup()">
+</app-ocr-popup>
+
+
+<app-dpr-analyser
+  *ngIf="isDocumentAnalyserVisible"
+  (close)="closeDprAnalyserPopup()">
+</app-dpr-analyser>
+
+<app-video-popup *ngIf="isVideoPopupVisible"
+                 (close)="closeVideoPopup()">
+</app-video-popup>
+
+<!-- Image Modal for zoom functionality -->
+<div *ngIf="isImageModalVisible" class="image-modal-overlay" (click)="closeImageModal()">
+  <div class="image-modal-content" (click)="$event.stopPropagation()">
+    <button class="modal-close-btn" (click)="closeImageModal()">×</button>
+    <img [src]="selectedImage" alt="Full Size Image" class="modal-image">
+  </div>
+</div>
+
+<div class="chat-container" [class.show]="isChatbotVisible" #chatContainer>
+  <header>
+    <button class="reset-btn" (click)="resetChat()">
+      <i class="fas fa-sync-alt" ></i>
+    </button><button class="close-btn" (click)="closeChatbot()">×</button>
+    <div class="mode-toggle">
+      <button [class.active]="responseMode === 'text'" (click)="setResponseMode('text')">
+        <img src="assets/images/Text_Mode.png" alt="Text Mode" class="text-mode-image" >
+      </button>
+      <button [class.active]="responseMode === 'image'" (click)="setResponseMode('image')">
+        <img src="assets/images/Image_Mode.png" alt="Image Mode" class="image-mode-image" style="width: 30px; height: 30px;">
+      </button>
+      <!-- <button [class.active]="responseMode === 'smart'" (click)="setResponseMode('smart')" class="smart-mode-btn">
+        <div class="smart-icon">
+          <div class="brain-icon">
+            <div class="brain-left"></div>
+            <div class="brain-right"></div>
+          </div>
+        </div>
+      </button> -->
+      <button (click)="openOcrPopup()">
+        <img src="assets/images/ocr_icon.png" alt="OCR Mode" class="ocr-mode-image">
+      </button>
+      <button (click)="openDprAnalyserPopup()">
+        <img src="assets/images/dpr_icon.png" alt="DPR Mode" class="dpr-mode-image">
+      </button>
+      <!-- <button (click)="openVideoPopup()">
+        <img src="assets/images/video-popup.png" alt="Video Generation" class="video-mode-image">
+      </button> -->
+    </div>
+    
+  </header>
+  <main>
+    <div class="chat-history" #chatHistoryContainer>
+      <div class="title-section">
+        <img src='assets/images/bott2.png' alt="Logo" class="logo" style="margin-bottom: -10px">
+        <h1 style="color: #2c8535">ConceptAI</h1>
+        <p style="color: #9bb79c">Custom Solutions, Unique to You</p>
+      </div><br><br>
+      <div class="message" *ngFor="let message of chatHistory" [ngClass]="message.role">
+        <!-- Staged processing display - replaces the entire message bubble -->
+        <div *ngIf="message.role === 'assistant' && message.content === 'working...' && processingState.message && !processingState.isComplete" 
+             class="staged-processing-standalone">
+          <div class="processing-message-standalone">
+            <span class="message-text-standalone">{{ processingState.message }}</span>
+            <div class="processing-dots-standalone">
+              <span class="dot-standalone"></span>
+              <span class="dot-standalone"></span>
+              <span class="dot-standalone"></span>
+            </div>
+          </div>
+          <div class="progress-bar-standalone">
+            <div class="progress-fill-standalone" [style.width.%]="processingState.progress"></div>
+          </div>
+        </div>
+        
+        <!-- Regular message content - only show when not processing or when processing is complete -->
+        <div *ngIf="!(message.role === 'assistant' && message.content === 'working...' && processingState.message && !processingState.isComplete)" 
+             class="message-content" [ngClass]="{'image-message': message.imageUrl}">
+          <div class="message-text" style="font-size: 15px;" [innerHTML]="message.content | safeHtml"></div>
+          
+          <!-- Display image if available -->
+          <img *ngIf="message.imageUrl" [src]="message.imageUrl" alt="Image" 
+               [class]="message.role === 'user' ? 'user-uploaded-image' : 'generated-image'" />
+        </div>
+
+        <div class="speaker-icon"
+             *ngIf="message.role === 'assistant' && message.content && !message.content.includes('<img') && message.content !== 'working...'"
+             (click)="listenToResponse(message.content)">
+          <i class="fas fa-volume-up"></i>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="input-section">
+      <div class="input-container">
+        <div *ngIf="selectedImage" class="image-preview">
+          <img [src]="selectedImage" alt="Selected Image" class="preview-thumbnail" (click)="openImageModal()">
+          <button class="remove-image-btn" (click)="removeSelectedImage()">×</button>
+        </div>
+        <div class="textarea-container">
+          <textarea 
+            [(ngModel)]="userInput" 
+            placeholder="Type your message here..." 
+            (keydown.enter)="$event.preventDefault(); sendMessage()" 
+            class="big-textbox" 
+            #messageTextarea
+            rows="1">
+          </textarea>
+          <div class="input-actions">
+            <label for="file-upload" class="file-upload-label" title="Attach Image">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.64 16.2a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+              </svg>
+            </label>
+            <input id="file-upload" type="file" (change)="handleFileUpload($event)" accept="image/*" style="display: none;" #fileUpload>
+            <!-- Send button commented out - use Enter key instead -->
+            <!-- <img src="assets/images/Sent.png" alt="Send" class="send-icon" (click)="sendMessage()"> -->
+            <!-- Microphone button commented out - has bugs to be resolved later -->
+            <!-- <img src="/assets/images/Mic.png" alt="Mic" class="mic-icon" [class.recording]="isRecording" (click)="toggleRecording()"> -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>

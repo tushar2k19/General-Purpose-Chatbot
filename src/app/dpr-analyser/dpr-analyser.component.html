@@ -1,0 +1,200 @@
+<!-- Shared Header -->
+<app-header 
+  [sidebarCollapsed]="isSidebarCollapsed" 
+  [showNewChatButton]="false"
+  (toggleSidebar)="toggleSidebar()">
+</app-header>
+
+<!-- Shared Sidebar -->
+<app-sidebar 
+  [collapsed]="isSidebarCollapsed" 
+  [activeMode]="activeMode"
+  (toggleCollapse)="toggleSidebar()">
+</app-sidebar>
+
+<!-- Modern DPR Analyser Page Layout -->
+<div class="modern-chat-container">
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <!-- DPR Header -->
+    <header class="dpr-header" *ngIf="!pdfLoaded">
+      <div class="header-info">
+        <h2 class="dpr-title">Document Analysis</h2>
+        <p class="dpr-subtitle">Upload a PDF document for comprehensive AI-powered analysis and Q&A</p>
+      </div>
+    </header>
+
+    <!-- DPR Content Area -->
+    <div class="dpr-content-area" #scrollContainer (scroll)="onScroll()">
+      <!-- Upload Section -->
+      <div *ngIf="!pdfLoaded && !isLoading" class="upload-section">
+        <div class="upload-card">
+          <input type="file" id="pdfUpload" (change)="handleFileUpload($event)" accept=".pdf" class="hidden-input" />
+          <label for="pdfUpload" class="upload-label">
+            <div class="upload-icon">
+              <svg width="64" height="64" color="orange" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+              </svg>
+            </div>
+            <h3>Upload PDF Document</h3>
+            <p>Click to browse or drag and drop</p>
+            <span class="supported-formats">Maximum file size: 25MB</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Processing Section -->
+      <div *ngIf="isLoading" class="dpr-processing-fullscreen">
+        <!-- Animated Icon -->
+        <div class="processing-icon-container">
+          <div class="icon-outer-ring"></div>
+          <div class="icon-middle-ring"></div>
+          <div class="icon-inner">
+            <svg class="document-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Processing Title -->
+        <h2 class="processing-title">Analyzing Document</h2>
+        
+        <!-- Current Stage Message -->
+        <p class="processing-stage-message">{{ processingState.message }}</p>
+
+        <!-- Progress Bar -->
+        <div class="processing-progress-container">
+          <div class="progress-track">
+            <div class="progress-fill" [style.width.%]="processingState.progress"></div>
+            <div class="progress-glow" [style.width.%]="processingState.progress"></div>
+          </div>
+          <span class="progress-percentage">{{ processingState.progress }}%</span>
+        </div>
+
+        <!-- Stage Indicators -->
+        <div class="stage-indicators">
+          <div class="stage-item" [class.active]="processingState.currentStage === 'extracting'" [class.completed]="getStageCompleted('extracting')">
+            <div class="stage-circle">1</div>
+            <span class="stage-label">Extract</span>
+          </div>
+          <div class="stage-line" [class.active]="getStageCompleted('extracting')"></div>
+          <div class="stage-item" [class.active]="processingState.currentStage === 'processing'" [class.completed]="getStageCompleted('processing')">
+            <div class="stage-circle">2</div>
+            <span class="stage-label">Process</span>
+          </div>
+          <div class="stage-line" [class.active]="getStageCompleted('processing')"></div>
+          <div class="stage-item" [class.active]="processingState.currentStage === 'embedding'" [class.completed]="getStageCompleted('embedding')">
+            <div class="stage-circle">3</div>
+            <span class="stage-label">Embed</span>
+          </div>
+          <div class="stage-line" [class.active]="getStageCompleted('embedding')"></div>
+          <div class="stage-item" [class.active]="processingState.currentStage === 'summarizing'" [class.completed]="getStageCompleted('summarizing')">
+            <div class="stage-circle">4</div>
+            <span class="stage-label">Summarize</span>
+          </div>
+          <div class="stage-line" [class.active]="getStageCompleted('summarizing')"></div>
+          <div class="stage-item" [class.active]="processingState.currentStage === 'finalizing'" [class.completed]="getStageCompleted('finalizing')">
+            <div class="stage-circle">5</div>
+            <span class="stage-label">Finalize</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analysis Section -->
+      <div *ngIf="pdfLoaded && overallSummary" class="analysis-section">
+        <!-- Document Summary Card -->
+        <div class="summary-card">
+          <div class="summary-header">
+            <h3>📄 Document Summary</h3>
+            <button class="new-document-btn" (click)="resetAnalysis()" title="Upload new document">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              New Document
+            </button>
+          </div>
+          <div class="summary-content" [innerHTML]="overallSummary"></div>
+        </div>
+
+        <!-- Chat Section -->
+        <div class="chat-section">
+          <div class="chat-header-title">
+            <h3>💬 Ask Questions</h3>
+            <p>Ask anything about the document content</p>
+          </div>
+
+          <div class="chat-messages-area">
+            <div *ngFor="let message of chatHistory" class="chat-message"
+                 [ngClass]="{'user-message': message.role === 'user', 'assistant-message': message.role === 'assistant'}">
+              <div class="message-wrapper">
+                <div class="message-icon">
+                  <img *ngIf="message.role === 'user'" src="assets/images/man.png" alt="User" class="icon">
+                  <img *ngIf="message.role === 'assistant'" src="assets/images/robot.png" alt="Assistant" class="icon">
+                </div>
+                
+                <!-- Staged processing display for chat -->
+                <div *ngIf="message.role === 'assistant' && message.content === 'Loading' && chatProcessingState.message && !chatProcessingState.isComplete" 
+                     class="dpr-chat-staged-processing">
+                  <div class="dpr-chat-processing-message">
+                    <span class="dpr-chat-message-text">{{ chatProcessingState.message }}</span>
+                    <div class="dpr-chat-processing-dots">
+                      <span class="dpr-chat-dot"></span>
+                      <span class="dpr-chat-dot"></span>
+                      <span class="dpr-chat-dot"></span>
+                    </div>
+                  </div>
+                  <div class="dpr-chat-progress-bar">
+                    <div class="dpr-chat-progress-fill" [style.width.%]="chatProcessingState.progress"></div>
+                  </div>
+                </div>
+                
+                <!-- Regular message content -->
+                <div *ngIf="!(message.role === 'assistant' && message.content === 'Loading' && chatProcessingState.message && !chatProcessingState.isComplete)"
+                     class="message-content" [innerHTML]="formatMarkdown(message.content)"></div>
+              </div>
+              
+              <!-- Copy button for assistant messages -->
+              <div *ngIf="message.role === 'assistant' && message.content && message.content !== 'Loading'"
+                   class="dpr-message-actions">
+                <button class="dpr-copy-btn" (click)="copyMessage(message.content)" title="Copy message">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  Copy
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Input (Fixed at bottom when analysis is loaded) -->
+    <footer *ngIf="pdfLoaded && overallSummary" class="chat-input-footer">
+      <div class="input-container">
+        <textarea
+          #questionInput
+          placeholder="Ask a question about the document..."
+          (keydown.enter)="onQuestionKeydown($event)"
+          (input)="autoResizeTextarea(questionInput)"
+          class="chat-input"
+          rows="1"
+          [disabled]="isGeneratingResponse"
+        ></textarea>
+        <button (click)="sendQuestion(questionInput)" class="send-button" [disabled]="isGeneratingResponse">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22,2 15,22 11,13 2,9 22,2"/>
+          </svg>
+        </button>
+      </div>
+    </footer>
+  </main>
+</div>

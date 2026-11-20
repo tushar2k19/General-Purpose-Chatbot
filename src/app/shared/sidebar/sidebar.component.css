@@ -1,0 +1,170 @@
+/* Shared Sidebar Styles - Professional Gray Theme */
+.sidebar {
+  width: var(--sidebar-width); /* Use global CSS variable */
+  background: #f8fafc; /* Refined light gray with subtle warmth */
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(229, 231, 235, 0.5); /* Subtle border */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 80px; /* Leave space for header */
+  z-index: 90;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.04); /* Subtle depth shadow */
+  backdrop-filter: blur(8px); /* Modern glass effect */
+}
+
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed-width); /* Use global collapsed width variable */
+}
+
+.nav-menu {
+  flex: 1;
+  padding: 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px; /* Reduced gap for tighter spacing */
+  overflow-y: auto;
+}
+
+.nav-menu::-webkit-scrollbar {
+  width: 4px;
+}
+
+.nav-menu::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.nav-menu::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: none;
+  border: none;
+  color: #374151; /* Refined dark gray for better contrast */
+  font-size: 15px;
+  font-weight: 600; /* Semibold to match intended design */
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth cubic-bezier transition */
+  text-align: left;
+  width: 100%;
+  border-radius: 8px; /* Smooth rounded corners */
+  margin: 2px 12px; /* Add margin for better spacing */
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar.collapsed .nav-item {
+  padding: 14px 20px;
+  justify-content: center;
+  margin: 2px 8px;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 8px;
+}
+
+.nav-item:hover::before {
+  opacity: 1;
+}
+
+.nav-item:hover {
+  background: rgba(0, 0, 0, 0.03);
+  color: #1f2937;
+  transform: translateX(2px); /* Subtle slide animation */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.nav-item.active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%);
+  color: #6366f1;
+  border-left: 4px solid #6366f1; /* Left border instead of right for modern look */
+  transform: translateX(2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+}
+
+.nav-icon {
+  flex-shrink: 0;
+}
+
+.nav-label {
+  font-weight: 600; /* Semibold to match intended design */
+  letter-spacing: 0.025em; /* Subtle letter spacing for refined look */
+}
+
+.user-account {
+  padding: 20px;
+  border-top: 1px solid #e5e7eb; /* Light gray border */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.user-avatar {
+  flex-shrink: 0;
+}
+
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937; /* Dark gray text for light background */
+  margin: 0 0 2px 0;
+}
+
+.user-email {
+  font-size: 12px;
+  color: #6b7280; /* Medium gray for secondary text */
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 80px;
+  }
+
+  .nav-label,
+  .user-account {
+    display: none;
+  }
+}
+

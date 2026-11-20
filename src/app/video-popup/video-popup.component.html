@@ -1,0 +1,45 @@
+
+<div class="popup-overlay">
+  <div class="popup-content">
+    <div class="popup-header">
+      <h3>Generate Video</h3>
+      <button class="close-btn" (click)="closePopup()">&times;</button>
+    </div>
+
+    <div class="input-section">
+          <textarea [(ngModel)]="prompt"
+                    placeholder="Describe the video you want to create..."
+                    rows="5"></textarea>
+
+      <div class="controls">
+        <select [(ngModel)]="aspectRatio">
+          <option value="16:9">16:9 (Landscape)</option>
+          <option value="9:16">9:16 (Portrait)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button (click)="generateVideo()"
+              [disabled]="isGenerating || !prompt.trim()">
+        {{ isGenerating ? 'Generating...' : 'Create Video' }}
+      </button>
+    </div>
+
+    <div *ngIf="isGenerating" class="loading-indicator">
+      <div class="spinner"></div>
+      <p>Video generation in progress. This may take 2-3 minutes...</p>
+    </div>
+
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
+    <div *ngIf="videoUrl" class="video-preview">
+      <video [src]="videoUrl" controls [style.aspectRatio]="aspectRatio"></video>
+      <button (click)="downloadVideo()" class="download-btn">
+        Download Video
+      </button>
+    </div>
+  </div>
+</div>

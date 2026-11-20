@@ -1,0 +1,296 @@
+<!-- Shared Header -->
+<app-header 
+  [sidebarCollapsed]="isSidebarCollapsed" 
+  [showNewChatButton]="chatHistory.length > 0"
+  (toggleSidebar)="toggleSidebar()"
+  (newChat)="resetChat()">
+</app-header>
+
+<!-- Shared Sidebar -->
+<app-sidebar 
+  [collapsed]="isSidebarCollapsed" 
+  [activeMode]="activeMode"
+  (toggleCollapse)="toggleSidebar()">
+</app-sidebar>
+
+<!-- Modern Chat Interface -->
+<div class="modern-chat-container">
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <!-- Chat Header -->
+    <header class="chat-header" *ngIf="chatHistory.length === 0">
+      <div class="header-info">
+        <h1 class="chat-title">Hello, User</h1>
+        <p class="chat-subtitle">How can I help you today?</p>
+      </div>
+      <!-- New Chat Button moved to header component -->
+    </header>
+
+    <!-- Chat Messages Area -->
+    <div class="chat-messages" #chatHistoryContainer>
+      <!-- Welcome Message -->
+      <div class="welcome-section" *ngIf="chatHistory.length === 0">
+        <div class="welcome-cards">
+          <div class="welcome-card" (click)="navigateToImageGeneration('Generate an image of a futuristic city skyline at sunset')">
+            <h3>Generate an image</h3>
+            <p>of a futuristic city skyline at sunset</p>
+          </div>
+          
+          <div class="welcome-card" (click)="setActiveMode('ocr')">
+            <h3>Analyze this document</h3>
+            <p>and extract key information using OCR</p>
+          </div>
+          
+          <div class="welcome-card" (click)="setActiveMode('dpr')">
+            <h3>Explain DPR</h3>
+            <p>in the context of project management</p>
+          </div>
+          
+          <div class="welcome-card" (click)="userInput = 'Write a short story about a robot discovering music'; sendMessage()" [class.disabled]="isGeneratingResponse">
+            <h3>Write a short story</h3>
+            <p>about a robot discovering music</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Messages -->
+      <div class="message-list">
+        <div class="message-wrapper" *ngFor="let message of chatHistory" [ngClass]="'message-' + message.role">
+          <!-- Staged processing display -->
+          <div *ngIf="message.role === 'assistant' && message.content === 'working...' && processingState.message && !processingState.isComplete" 
+               class="staged-processing-modern">
+            <div class="processing-content">
+              <span class="processing-text">{{ processingState.message }}</span>
+              <div class="processing-dots">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+              </div>
+            </div>
+            <div class="processing-progress">
+              <div class="progress-bar" [style.width.%]="processingState.progress"></div>
+            </div>
+          </div>
+          
+          <!-- Regular message content -->
+          <div *ngIf="!(message.role === 'assistant' && message.content === 'working...' && processingState.message && !processingState.isComplete)" 
+               class="message-container">
+            
+            <!-- User Message Layout -->
+            <div *ngIf="message.role === 'user'" class="user-message-row">
+              <div class="message-content user-message" [ngClass]="{'image-message': message.imageUrl}">
+                <div class="message-text" [innerHTML]="message.content | safeHtml"></div>
+                <img *ngIf="message.imageUrl" [src]="message.imageUrl" alt="Image" 
+                     class="user-uploaded-image" (click)="openImageModal()" />
+              </div>
+              <div class="user-avatar">
+                <div class="avatar-circle">U</div>
+              </div>
+            </div>
+
+            <!-- Assistant Message Layout -->
+            <div *ngIf="message.role === 'assistant'" class="assistant-message-row">
+              <div class="assistant-avatar">
+                <div class="avatar-circle bot-avatar">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <circle cx="12" cy="5" r="2"/>
+                    <path d="M12 7v4"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="assistant-content">
+                <div class="message-content assistant-message" [ngClass]="{'image-message': message.imageUrl}">
+                  <div class="message-text" [innerHTML]="message.content | safeHtml"></div>
+                  <img *ngIf="message.imageUrl" [src]="message.imageUrl" alt="Image" 
+                       class="generated-image" (click)="openImageModal()" />
+                </div>
+                <div class="message-actions" 
+                     *ngIf="message.content && !message.content.includes('<img') && message.content !== 'working...'">
+                  <button class="audio-btn" (click)="listenToResponse(message.content)" title="Listen">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polygon points="11,5 6,9 2,9 2,15 6,15 11,19 11,5"/>
+                      <path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Input Area -->
+    <footer class="chat-input-area">
+      <div class="input-container">
+        <!-- Image Preview -->
+        <div *ngIf="selectedImage" class="image-preview">
+          <img [src]="selectedImage" alt="Selected Image" class="preview-thumbnail" (click)="openImageModal()">
+          <button class="remove-image-btn" (click)="removeSelectedImage()">×</button>
+        </div>
+        
+        <!-- Input Field -->
+        <div class="input-field">
+          <textarea 
+            [(ngModel)]="userInput" 
+            placeholder="Message ConceptAI..." 
+            (keydown.enter)="!isGeneratingResponse && $event.preventDefault(); sendMessage()" 
+            class="message-input" 
+            #messageTextarea
+            rows="1">
+          </textarea>
+          
+          <div class="input-actions">
+            <label for="file-upload" class="attach-btn" title="Attach Image">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.64 16.2a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+              </svg>
+            </label>
+            <input id="file-upload" type="file" (change)="handleFileUpload($event)" accept="image/*" style="display: none;" #fileUpload>
+            
+            <!-- Microphone button -->
+            <button class="mic-btn" 
+                    (click)="toggleVoiceRecording()" 
+                    [class.recording]="isVoiceRecording"
+                    [disabled]="isGeneratingResponse"
+                    [title]="isVoiceRecording ? 'Stop recording' : 'Start voice input'">
+              <svg *ngIf="!isVoiceRecording" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
+              <svg *ngIf="isVoiceRecording" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="12" r="10"/>
+              </svg>
+            </button>
+            
+            <button class="send-btn" (click)="sendMessage()" [disabled]="(!userInput.trim() && !selectedImage) || isGeneratingResponse">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22,2 15,22 11,13 2,9 22,2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </main>
+</div>
+
+
+<!-- Chat Popup Container -->
+<div class="chat-popup-container" [class.show]="isChatbotVisible">
+  <header class="popup-header">
+    <button class="reset-btn" (click)="resetChat()">
+      <i class="fas fa-sync-alt"></i>
+    </button>
+    <button class="close-btn" (click)="closeChatbot()">×</button>
+    <div class="mode-toggle">
+      <button [class.active]="responseMode === 'text'" (click)="setResponseMode('text')">
+        <img src="assets/images/Text_Mode.png" alt="Text Mode" class="text-mode-image">
+      </button>
+      <button [class.active]="responseMode === 'image'" (click)="setResponseMode('image')">
+        <img src="assets/images/Image_Mode.png" alt="Image Mode" class="image-mode-image" style="width: 30px; height: 30px;">
+      </button>
+      <button (click)="openOcrPopup()">
+        <img src="assets/images/ocr_icon.png" alt="OCR Mode" class="ocr-mode-image">
+      </button>
+      <button (click)="openDprAnalyserPopup()">
+        <img src="assets/images/dpr_icon.png" alt="DPR Mode" class="dpr-mode-image">
+      </button>
+    </div>
+  </header>
+  
+  <main class="popup-main">
+    <div class="popup-chat-history">
+      <div class="title-section">
+        <img src='assets/images/bott2.png' alt="Logo" class="logo" style="margin-bottom: -10px">
+        <h1 style="color: #2c8535">ConceptAI</h1>
+        <p style="color: #9bb79c">Custom Solutions, Unique to You</p>
+      </div><br><br>
+      <div class="message" *ngFor="let message of chatHistory" [ngClass]="message.role">
+        <!-- Staged processing display -->
+        <div *ngIf="message.role === 'assistant' && message.content === 'working...' && processingState.message && !processingState.isComplete" 
+             class="staged-processing-standalone">
+          <div class="processing-message-standalone">
+            <span class="message-text-standalone">{{ processingState.message }}</span>
+            <div class="processing-dots-standalone">
+              <span class="dot-standalone"></span>
+              <span class="dot-standalone"></span>
+              <span class="dot-standalone"></span>
+            </div>
+          </div>
+          <div class="progress-bar-standalone">
+            <div class="progress-fill-standalone" [style.width.%]="processingState.progress"></div>
+          </div>
+        </div>
+        
+        <!-- Regular message content -->
+        <div *ngIf="!(message.role === 'assistant' && message.content === 'working...' && processingState.message && !processingState.isComplete)" 
+             class="message-content" [ngClass]="{'image-message': message.imageUrl}">
+          <div class="message-text" style="font-size: 15px;" [innerHTML]="message.content | safeHtml"></div>
+          
+          <!-- Display image if available -->
+          <img *ngIf="message.imageUrl" [src]="message.imageUrl" alt="Image" 
+               [class]="message.role === 'user' ? 'user-uploaded-image' : 'generated-image'" />
+         </div>
+         
+         <!-- Action buttons for assistant messages -->
+         <div class="message-actions" 
+             *ngIf="message.role === 'assistant' && message.content && message.content !== 'working...'">
+          
+          <!-- Copy button -->
+          <div class="copy-icon" (click)="copyMessage(message.content)" title="Copy message">
+            <i class="fas fa-copy"></i>
+          </div>
+          
+          <!-- Speaker button (only for text, not images) -->
+          <div class="speaker-icon" 
+               *ngIf="!message.content.includes('<img')"
+               (click)="listenToResponse(message.content)" title="Listen to message">
+            <i class="fas fa-volume-up"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="popup-footer">
+    <div class="input-section">
+      <div class="input-container">
+        <div *ngIf="selectedImage" class="image-preview">
+          <img [src]="selectedImage" alt="Selected Image" class="preview-thumbnail" (click)="openImageModal()">
+          <button class="remove-image-btn" (click)="removeSelectedImage()">×</button>
+        </div>
+        <div class="textarea-container">
+          <textarea 
+            [(ngModel)]="userInput" 
+            placeholder="Type your message here..." 
+            (keydown.enter)="$event.preventDefault(); sendMessage()" 
+            class="big-textbox" 
+            #popupMessageTextarea
+            rows="1">
+          </textarea>
+          <div class="input-actions">
+            <label for="popup-file-upload" class="file-upload-label" title="Attach Image">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.64 16.2a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+              </svg>
+            </label>
+            <input id="popup-file-upload" type="file" (change)="handleFileUpload($event)" accept="image/*" style="display: none;" #popupFileUpload>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- Image Modal for zoom functionality -->
+<div *ngIf="isImageModalVisible" class="image-modal-overlay" (click)="closeImageModal()">
+  <div class="image-modal-content" (click)="$event.stopPropagation()">
+    <button class="modal-close-btn" (click)="closeImageModal()">×</button>
+    <img [src]="selectedImage" alt="Full Size Image" class="modal-image">
+  </div>
+</div>
